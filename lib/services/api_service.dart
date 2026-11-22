@@ -44,7 +44,7 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/products').replace(queryParameters: queryParams);
       final response = await http
           .get(uri)
-          .timeout(const Duration(milliseconds: 1500));
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
@@ -93,7 +93,7 @@ class ApiService {
             headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
             body: json.encode(payload),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(utf8.decode(response.bodyBytes));
