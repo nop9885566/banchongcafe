@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import '../services/storage_service.dart';
+import 'queue_screen.dart';
 import '../widgets/mobile_container.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_drawer.dart';
@@ -26,6 +28,7 @@ class _MenuScreenState extends State<MenuScreen> {
   bool? _availabilityFilter; // null = ทั้งหมด, true = ขายอยู่, false = หมด/ปิดขาย
   List<Product> _products = [];
   bool _isLoading = true;
+  int? _activeOrderId;
 
   final List<String> _categories = const ['Coffee', 'Non-Coffee', 'Cake'];
 
@@ -39,6 +42,16 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+    _checkActiveOrder();
+  }
+
+  Future<void> _checkActiveOrder() async {
+    final activeId = await StorageService().loadActiveOrderId();
+    if (mounted) {
+      setState(() {
+        _activeOrderId = activeId;
+      });
+    }
   }
 
   @override
@@ -115,6 +128,47 @@ class _MenuScreenState extends State<MenuScreen> {
       drawer: const AppDrawer(currentRoute: '/menu'),
       child: Column(
         children: [
+          // Active Order Banner (ถ้าเคยสั่งไว้และรีเฟรชกลับมา)
+          if (_activeOrderId != null)
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QueueScreen(orderId: _activeOrderId!),
+                  ),
+                ).then((_) => _checkActiveOrder());
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: AppColors.primaryDarkGreen,
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'คุณมีออเดอร์ที่กำลังดำเนินการ (#$_activeOrderId)',
+                        style: GoogleFonts.notoSansThai(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'แตะดูสถานะคิว ›',
+                      style: GoogleFonts.notoSansThai(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // 1. Search Bar & Category Filter Tabs
           _buildFilterHeader(),
 

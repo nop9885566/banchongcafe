@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../models/cart_item.dart';
 import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/mobile_container.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_drawer.dart';
@@ -38,6 +39,24 @@ class _CartScreenState extends State<CartScreen> {
       _items.fold(0.0, (sum, item) => sum + item.totalPrice);
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedCustomerInfo();
+  }
+
+  Future<void> _loadSavedCustomerInfo() async {
+    final info = await StorageService().loadCustomerInfo();
+    if (mounted) {
+      if (info['name']?.isNotEmpty == true) {
+        _nameController.text = info['name']!;
+      }
+      if (info['phone']?.isNotEmpty == true) {
+        _phoneController.text = info['phone']!;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
@@ -60,6 +79,13 @@ class _CartScreenState extends State<CartScreen> {
             ? null
             : _noteController.text.trim(),
       );
+
+      // บันทึกข้อมูลลูกค้าและออเดอร์ล่าสุดลง Storage ไม่ให้หายตอนรีเฟรช
+      await StorageService().saveCustomerInfo(
+        _nameController.text.trim(),
+        _phoneController.text.trim(),
+      );
+      await StorageService().saveActiveOrderId(order.id);
 
       // Clear cart
       if (widget.cartItems != null) {

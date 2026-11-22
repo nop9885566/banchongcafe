@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/mobile_container.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_drawer.dart';
@@ -62,6 +63,9 @@ class _QueueScreenState extends State<QueueScreen> {
       final updated = await ApiService().getOrder(widget.orderId);
       if (mounted) {
         setState(() => _order = updated);
+        if (updated.isCompleted || updated.isCancelled) {
+          StorageService().clearActiveOrderId();
+        }
       }
     } catch (e) {
       debugPrint('Error refreshing order: $e');
