@@ -95,44 +95,22 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 20));
 
+      debugPrint('CreateOrder Response [${response.statusCode}]: ${response.body}');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         if (data['success'] == true && data['order'] != null) {
           return OrderModel.fromJson(data['order']);
         }
+      } else {
+        throw Exception('Server ตอบกลับรหัส [${response.statusCode}]: ${response.body}');
       }
     } catch (e) {
-      debugPrint('API Error creating order (using fallback mock): $e');
+      debugPrint('API Error creating order: $e');
+      rethrow;
     }
 
-    // Mock Fallback
-    double total = items.fold(0.0, (sum, item) => sum + item.totalPrice);
-    final mockOrder = OrderModel(
-      id: _mockOrderCounter,
-      orderNumber: '#A${_mockOrderCounter.toString().padLeft(3, '0')}',
-      queueNumber: _mockOrderCounter,
-      customerName: customerName,
-      customerPhone: customerPhone,
-      totalPrice: total,
-      status: 'pending',
-      paymentStatus: 'unpaid',
-      note: note,
-      queueAhead: 1,
-      createdAt: DateTime.now().toString().substring(0, 19),
-      items: items
-          .map((i) => OrderItemModel(
-                productId: i.product.id,
-                name: i.product.name,
-                quantity: i.quantity,
-                price: i.unitPrice,
-                options: i.optionsSummary,
-              ))
-          .toList(),
-    );
-
-    _mockOrders[_mockOrderCounter] = mockOrder;
-    _mockOrderCounter++;
-    return mockOrder;
+    throw Exception('ไม่สามารถส่งคำสั่งซื้อไปยังเซิร์ฟเวอร์ได้');
   }
 
   // 3. ดึงสถานะคิว
